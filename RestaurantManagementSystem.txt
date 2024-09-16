@@ -1,0 +1,247 @@
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+
+
+abstract class Item {
+    private String name;
+    private double price;
+
+   
+    public Item(String name, double price) {
+        this.name = name;
+        this.price = price;
+    }
+
+    
+    public String getName() {
+        return name;
+    }
+
+    public double getPrice() {
+        return price;
+    }
+
+   
+    public void displayDetails() {
+        System.out.println(name + ", Price: Rs " + price);
+    }
+}
+
+
+class Dish extends Item {
+  
+    public Dish(String name, double price) {
+        super(name, price);
+    }
+}
+
+
+class Drink extends Item {
+   
+    public Drink(String name, double price) {
+        super(name, price);
+    }
+}
+
+class Menu {
+    private List<Dish> dishes;
+    private List<Drink> drinks;
+
+    
+    public Menu() {
+        dishes = new ArrayList<>();
+        drinks = new ArrayList<>();
+
+        // Predefined menu items
+        dishes.add(new Dish("Chicken Biryani", 150.00));
+        dishes.add(new Dish("Chicken Curry", 100.00));
+        dishes.add(new Dish("Chapati", 50.00));
+        dishes.add(new Dish("Mutton Curry", 70.00));
+        dishes.add(new Dish("Mutton Biryani", 200.00));
+
+      
+        drinks.add(new Drink("Maaza", 30.00));
+        drinks.add(new Drink("Thums Up", 30.00));
+        drinks.add(new Drink("Sprite", 30.00));
+        drinks.add(new Drink("Lemon Juice", 30.00));
+    }
+
+    public void displayDishes() {
+        System.out.println("Dishes:");
+        for (int i = 0; i < dishes.size(); i++) {
+            System.out.print((i + 1) + ". ");
+            dishes.get(i).displayDetails();
+        }
+    }
+
+
+    public void displayDrinks() {
+        System.out.println("Drinks:");
+        for (int i = 0; i < drinks.size(); i++) {
+            System.out.print((i + 1) + ". ");
+            drinks.get(i).displayDetails();
+        }
+    }
+
+
+    public Dish getDish(int index) {
+        if (index >= 0 && index < dishes.size()) {
+            return dishes.get(index);
+        } else {
+            return null;
+        }
+    }
+
+    public Drink getDrink(int index) {
+        if (index >= 0 && index < drinks.size()) {
+            return drinks.get(index);
+        } else {
+            return null;
+        }
+    }
+
+   
+    public int getNumberOfDishes() {
+        return dishes.size();
+    }
+
+ 
+    public int getNumberOfDrinks() {
+        return drinks.size();
+    }
+}
+
+class Order {
+    private List<Item> orderedItems;
+
+  
+    public Order() {
+        orderedItems = new ArrayList<>();
+    }
+
+   
+    public void addItem(Item item) {
+        orderedItems.add(item);
+    }
+
+ 
+    public void displayOrder(String restaurantName) {
+        System.out.println("\nRestaurant: " + restaurantName);
+        System.out.println("Order Details:");
+        for (Item item : orderedItems) {
+            item.displayDetails();
+        }
+    }
+
+    public double calculateTotal() {
+        double total = 0;
+        for (Item item : orderedItems) {
+            total += item.getPrice();
+        }
+        return total;
+    }
+}
+
+
+abstract class BillingStrategy {
+    public abstract double getBillAmount(double total);
+}
+
+class RegularBilling extends BillingStrategy {
+    @Override
+    public double getBillAmount(double total) {
+        return total; 
+    }
+}
+
+class DiscountBilling extends BillingStrategy {
+    private double discountPercentage;
+
+
+    public DiscountBilling(double discountPercentage) {
+        this.discountPercentage = discountPercentage;
+    }
+
+    @Override
+    public double getBillAmount(double total) {
+        return total - (total * discountPercentage / 100);
+    }
+}
+
+
+public class RestaurantManagementSystem {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        Menu menu = new Menu();
+        Order order = new Order();
+
+     
+        String[] restaurantNames = {"Hotel Nayaab", "Paradise", "Pista House", "Sweet Heart"};
+        System.out.println("Select a restaurant:");
+        for (int i = 0; i < restaurantNames.length; i++) {
+            System.out.println((i + 1) + ". " + restaurantNames[i]);
+        }
+        int restaurantChoice = scanner.nextInt();
+        String restaurantName = (restaurantChoice >= 1 && restaurantChoice <= restaurantNames.length)
+                ? restaurantNames[restaurantChoice - 1]
+                : "Unknown Restaurant";
+
+        while (true) {
+            System.out.println("\nSelect category:");
+            System.out.println("1. Dishes");
+            System.out.println("2. Drinks");
+            System.out.println("3. Finish Ordering");
+            int category = scanner.nextInt();
+
+            if (category == 1) {
+                menu.displayDishes();
+                System.out.println("Select a dish to add to your order (enter the serial number):");
+                int dishNumber = scanner.nextInt();
+                if (dishNumber >= 1 && dishNumber <= menu.getNumberOfDishes()) {
+                    Dish selectedDish = menu.getDish(dishNumber - 1);
+                    order.addItem(selectedDish);
+                } else {
+                    System.out.println("Invalid option. Please try again.");
+                }
+            } else if (category == 2) {
+                menu.displayDrinks();
+                System.out.println("Select a drink to add to your order (enter the serial number):");
+                int drinkNumber = scanner.nextInt();
+                if (drinkNumber >= 1 && drinkNumber <= menu.getNumberOfDrinks()) {
+                    Drink selectedDrink = menu.getDrink(drinkNumber - 1);
+                    order.addItem(selectedDrink);
+                } else {
+                    System.out.println("Invalid option. Please try again.");
+                }
+            } else if (category == 3) {
+                break; // Finish ordering
+            } else {
+                System.out.println("Invalid option. Please try again.");
+            }
+        }
+
+    
+        order.displayOrder(restaurantName);
+
+      
+        System.out.println("Select billing strategy:");
+        System.out.println("1. Regular Billing");
+        System.out.println("2. Discount Billing (10% discount)");
+        int billingOption = scanner.nextInt();
+        BillingStrategy billingStrategy;
+
+        if (billingOption == 1) {
+            billingStrategy = new RegularBilling();
+        } else if (billingOption == 2) {
+            billingStrategy = new DiscountBilling(10);
+        } else {
+            System.out.println("Invalid option. Defaulting to Regular Billing.");
+            billingStrategy = new RegularBilling();
+        }
+
+    
+        double total = order.calculateTotal();
+        System.out.println("Total: Rs " + billingStrategy.getBillAmount(total));
+    }
+}
