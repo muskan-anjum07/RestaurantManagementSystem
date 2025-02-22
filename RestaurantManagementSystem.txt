@@ -1,28 +1,25 @@
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
+
+
+class InvalidSelectionException extends Exception {
+    public InvalidSelectionException(String message) {
+        super(message);
+    }
+}
 
 
 abstract class Item {
     private String name;
     private double price;
 
-   
     public Item(String name, double price) {
         this.name = name;
         this.price = price;
     }
 
-    
-    public String getName() {
-        return name;
-    }
+    public String getName() { return name; }
+    public double getPrice() { return price; }
 
-    public double getPrice() {
-        return price;
-    }
-
-   
     public void displayDetails() {
         System.out.println(name + ", Price: Rs " + price);
     }
@@ -30,37 +27,29 @@ abstract class Item {
 
 
 class Dish extends Item {
-  
-    public Dish(String name, double price) {
-        super(name, price);
-    }
+    public Dish(String name, double price) { super(name, price); }
 }
 
 
 class Drink extends Item {
-   
-    public Drink(String name, double price) {
-        super(name, price);
-    }
+    public Drink(String name, double price) { super(name, price); }
 }
+
 
 class Menu {
     private List<Dish> dishes;
     private List<Drink> drinks;
 
-    
     public Menu() {
         dishes = new ArrayList<>();
         drinks = new ArrayList<>();
-
-        // Predefined menu items
+        
         dishes.add(new Dish("Chicken Biryani", 150.00));
         dishes.add(new Dish("Chicken Curry", 100.00));
         dishes.add(new Dish("Chapati", 50.00));
         dishes.add(new Dish("Mutton Curry", 70.00));
         dishes.add(new Dish("Mutton Biryani", 200.00));
 
-      
         drinks.add(new Drink("Maaza", 30.00));
         drinks.add(new Drink("Thums Up", 30.00));
         drinks.add(new Drink("Sprite", 30.00));
@@ -75,7 +64,6 @@ class Menu {
         }
     }
 
-
     public void displayDrinks() {
         System.out.println("Drinks:");
         for (int i = 0; i < drinks.size(); i++) {
@@ -84,48 +72,23 @@ class Menu {
         }
     }
 
-
     public Dish getDish(int index) {
-        if (index >= 0 && index < dishes.size()) {
-            return dishes.get(index);
-        } else {
-            return null;
-        }
+        return (index >= 0 && index < dishes.size()) ? dishes.get(index) : null;
     }
 
     public Drink getDrink(int index) {
-        if (index >= 0 && index < drinks.size()) {
-            return drinks.get(index);
-        } else {
-            return null;
-        }
-    }
-
-   
-    public int getNumberOfDishes() {
-        return dishes.size();
-    }
-
- 
-    public int getNumberOfDrinks() {
-        return drinks.size();
+        return (index >= 0 && index < drinks.size()) ? drinks.get(index) : null;
     }
 }
+
 
 class Order {
     private List<Item> orderedItems;
 
-  
-    public Order() {
-        orderedItems = new ArrayList<>();
-    }
+    public Order() { orderedItems = new ArrayList<>(); }
 
-   
-    public void addItem(Item item) {
-        orderedItems.add(item);
-    }
+    public void addItem(Item item) { orderedItems.add(item); }
 
- 
     public void displayOrder(String restaurantName) {
         System.out.println("\nRestaurant: " + restaurantName);
         System.out.println("Order Details:");
@@ -135,11 +98,7 @@ class Order {
     }
 
     public double calculateTotal() {
-        double total = 0;
-        for (Item item : orderedItems) {
-            total += item.getPrice();
-        }
-        return total;
+        return orderedItems.stream().mapToDouble(Item::getPrice).sum();
     }
 }
 
@@ -150,19 +109,12 @@ abstract class BillingStrategy {
 
 class RegularBilling extends BillingStrategy {
     @Override
-    public double getBillAmount(double total) {
-        return total; 
-    }
+    public double getBillAmount(double total) { return total; }
 }
 
 class DiscountBilling extends BillingStrategy {
     private double discountPercentage;
-
-
-    public DiscountBilling(double discountPercentage) {
-        this.discountPercentage = discountPercentage;
-    }
-
+    public DiscountBilling(double discountPercentage) { this.discountPercentage = discountPercentage; }
     @Override
     public double getBillAmount(double total) {
         return total - (total * discountPercentage / 100);
@@ -176,71 +128,60 @@ public class RestaurantManagementSystem {
         Menu menu = new Menu();
         Order order = new Order();
 
-     
         String[] restaurantNames = {"Hotel Nayaab", "Paradise", "Pista House", "Sweet Heart"};
         System.out.println("Select a restaurant:");
         for (int i = 0; i < restaurantNames.length; i++) {
             System.out.println((i + 1) + ". " + restaurantNames[i]);
         }
+
         int restaurantChoice = scanner.nextInt();
-        String restaurantName = (restaurantChoice >= 1 && restaurantChoice <= restaurantNames.length)
-                ? restaurantNames[restaurantChoice - 1]
-                : "Unknown Restaurant";
+        String restaurantName = (restaurantChoice >= 1 && restaurantChoice <= restaurantNames.length) ? 
+                                 restaurantNames[restaurantChoice - 1] : "Unknown Restaurant";
 
-        while (true) {
-            System.out.println("\nSelect category:");
-            System.out.println("1. Dishes");
-            System.out.println("2. Drinks");
-            System.out.println("3. Finish Ordering");
-            int category = scanner.nextInt();
+        Thread menuThread = new Thread(() -> {
+            while (true) {
+                try {
+                    System.out.println("\nSelect category:");
+                    System.out.println("1. Dishes");
+                    System.out.println("2. Drinks");
+                    System.out.println("3. Finish Ordering");
+                    int category = scanner.nextInt();
 
-            if (category == 1) {
-                menu.displayDishes();
-                System.out.println("Select a dish to add to your order (enter the serial number):");
-                int dishNumber = scanner.nextInt();
-                if (dishNumber >= 1 && dishNumber <= menu.getNumberOfDishes()) {
-                    Dish selectedDish = menu.getDish(dishNumber - 1);
-                    order.addItem(selectedDish);
-                } else {
-                    System.out.println("Invalid option. Please try again.");
+                    if (category == 1) {
+                        menu.displayDishes();
+                        System.out.println("Select a dish to add to your order (enter the serial number):");
+                        int dishNumber = scanner.nextInt();
+                        order.addItem(menu.getDish(dishNumber - 1));
+                    } else if (category == 2) {
+                        menu.displayDrinks();
+                        System.out.println("Select a drink to add to your order (enter the serial number):");
+                        int drinkNumber = scanner.nextInt();
+                        order.addItem(menu.getDrink(drinkNumber - 1));
+                    } else if (category == 3) {
+                        break;
+                    } else {
+                        throw new InvalidSelectionException("Invalid option. Please try again.");
+                    }
+                } catch (InputMismatchException | NullPointerException e) {
+                    System.out.println("Invalid input. Please enter a valid number.");
+                    scanner.next();
+                } catch (InvalidSelectionException e) {
+                    System.out.println(e.getMessage());
                 }
-            } else if (category == 2) {
-                menu.displayDrinks();
-                System.out.println("Select a drink to add to your order (enter the serial number):");
-                int drinkNumber = scanner.nextInt();
-                if (drinkNumber >= 1 && drinkNumber <= menu.getNumberOfDrinks()) {
-                    Drink selectedDrink = menu.getDrink(drinkNumber - 1);
-                    order.addItem(selectedDrink);
-                } else {
-                    System.out.println("Invalid option. Please try again.");
-                }
-            } else if (category == 3) {
-                break; // Finish ordering
-            } else {
-                System.out.println("Invalid option. Please try again.");
             }
-        }
+        });
 
-    
+        menuThread.start();
+        try { menuThread.join(); } catch (InterruptedException e) { e.printStackTrace(); }
+
         order.displayOrder(restaurantName);
 
-      
         System.out.println("Select billing strategy:");
         System.out.println("1. Regular Billing");
         System.out.println("2. Discount Billing (10% discount)");
         int billingOption = scanner.nextInt();
-        BillingStrategy billingStrategy;
+        BillingStrategy billingStrategy = (billingOption == 2) ? new DiscountBilling(10) : new RegularBilling();
 
-        if (billingOption == 1) {
-            billingStrategy = new RegularBilling();
-        } else if (billingOption == 2) {
-            billingStrategy = new DiscountBilling(10);
-        } else {
-            System.out.println("Invalid option. Defaulting to Regular Billing.");
-            billingStrategy = new RegularBilling();
-        }
-
-    
         double total = order.calculateTotal();
         System.out.println("Total: Rs " + billingStrategy.getBillAmount(total));
     }
